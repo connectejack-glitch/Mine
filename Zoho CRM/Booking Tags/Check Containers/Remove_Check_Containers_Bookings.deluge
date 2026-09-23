@@ -1,0 +1,69 @@
+void automation.Remove_Check_Containers_Bookings(String booking_id,String severity)
+{
+try
+{
+	if(booking_id == null || booking_id.toString().trim() == "")
+	{
+		return;
+	}
+	if(severity == null || severity.toString().trim() == "")
+	{
+		return;
+	}
+	bookingId = booking_id.toString().trim();
+	tagName = severity.toString().trim();
+	rec = zoho.crm.getRecordById("Deals",bookingId.toLong());
+	if(rec == null)
+	{
+		return;
+	}
+	currentStageValue = rec.get("Stage");
+	if(currentStageValue == null)
+	{
+		return;
+	}
+	currentStage = currentStageValue.toString().trim();
+	if(currentStage.equalsIgnoreCase("Pending Shipment"))
+	{
+		return;
+	}
+	existingTags = rec.get("Tag");
+	if(existingTags == null || existingTags.isEmpty())
+	{
+		return;
+	}
+	tagExists = false;
+	for each tg in existingTags
+	{
+		tagNameValue = tg.get("name");
+		if(tagNameValue != null && tagNameValue.toString().trim().equalsIgnoreCase(tagName))
+		{
+			tagExists = true;
+			break;
+		}
+	}
+	if(!tagExists)
+	{
+		return;
+	}
+	removeTagList = List();
+	removeTagMap = Map();
+	removeTagMap.put("name",tagName);
+	removeTagList.add(removeTagMap);
+	removePayload = Map();
+	removePayload.put("tags",removeTagList);
+	apiUrl = "https://www.zohoapis.com/crm/v8/Deals/" + bookingId + "/actions/remove_tags";
+	removeResponse = invokeurl
+	[
+		url :apiUrl
+		type :POST
+		parameters:removePayload.toString()
+		connection:"zoho_crm"
+	];
+	info removeResponse;
+}
+catch(e)
+{
+	info e.message;
+}
+}
