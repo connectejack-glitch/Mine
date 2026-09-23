@@ -1,0 +1,69 @@
+void automation.BOOKING_Check_Containers(String booking_id,String severity)
+{
+try
+{
+	if(booking_id == null || booking_id.toString().trim() == "")
+	{
+		return;
+	}
+	if(severity == null || severity.toString().trim() == "")
+	{
+		return;
+	}
+	bookingId = booking_id.toString().trim();
+	requestedTag = severity.toString().trim();
+	rec = zoho.crm.getRecordById("Deals",bookingId.toLong());
+	if(rec == null)
+	{
+		return;
+	}
+	currentStageValue = rec.get("Stage");
+	if(currentStageValue == null)
+	{
+		return;
+	}
+	currentStage = currentStageValue.toString().trim();
+	if(!currentStage.equalsIgnoreCase("Pending Shipment"))
+	{
+		return;
+	}
+	existingTags = rec.get("Tag");
+	if(existingTags == null)
+	{
+		existingTags = List();
+	}
+	tagAlreadyExists = false;
+	for each tg in existingTags
+	{
+		tagNameValue = tg.get("name");
+		if(tagNameValue != null)
+		{
+			tagName = tagNameValue.toString().trim();
+			if(tagName.equalsIgnoreCase(requestedTag))
+			{
+				tagAlreadyExists = true;
+				break;
+			}
+		}
+	}
+	if(tagAlreadyExists)
+	{
+		return;
+	}
+	finalTags = List();
+	for each existingTag in existingTags
+	{
+		finalTags.add(existingTag);
+	}
+	newTag = Map();
+	newTag.put("name",requestedTag);
+	finalTags.add(newTag);
+	updateMap = Map();
+	updateMap.put("Tag",finalTags);
+	zoho.crm.updateRecord("Deals",bookingId.toLong(),updateMap);
+}
+catch(e)
+{
+	info e.message;
+}
+}
